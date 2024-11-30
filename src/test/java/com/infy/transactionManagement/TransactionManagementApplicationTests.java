@@ -1,4 +1,4 @@
-package com.infy.transaction_management;
+package com.infy.transactionManagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

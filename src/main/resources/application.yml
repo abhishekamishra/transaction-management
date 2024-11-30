@@ -1,0 +1,13 @@
+spring:
+  name: transaction-management
+  jpa:
+    database: POSTGRESQL
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/transaction_management
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
