@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -18,25 +19,38 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/get-details/{id}")
     public ResponseEntity<CustomerDto> getCustomerDetails(@PathVariable("id") Long id) {
-        log.info("Controller with id" + id);
 
-        customerService.getCustomerDetails(id);
-
-        return ResponseEntity.ok(null);
+        Optional<CustomerDto> customerDto = customerService.getCustomerDetails(id);
+        if (customerDto.isPresent()) {
+            log.debug("Customer Details: " + customerDto.get());
+            return ResponseEntity.ok(customerDto.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/save-customer")
-    public ResponseEntity<CustomerDto> saveCustomerDetails(@RequestBody CustomerDto customerDto) {
-        customerService.saveCustomerDetails(customerDto);
-        return ResponseEntity.ok(null);
+    public ResponseEntity<List<CustomerDto>> saveCustomerDetails(@RequestBody CustomerDto customerDto) {
+        Optional<List<CustomerDto>> customerDtos = customerService.saveCustomerDetails(customerDto);
+        if (customerDtos.isPresent()) {
+            log.debug("Saved Customers Details: " + customerDtos.get());
+            return ResponseEntity.ok(customerDtos.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @GetMapping("/calculate/{id}")
+    @GetMapping("/calculate-points/{id}")
     public ResponseEntity<TransactionDetailsDto> calculateDiscountPoints(@PathVariable("id") Long id) {
-        //log.info("Controller with id" + id);
+
         Optional<TransactionDetailsDto> transactionDetailsDto = customerService.calculateDiscountPoints(id);
-        return ResponseEntity.ok(transactionDetailsDto.get());
+        if (transactionDetailsDto.isPresent()) {
+            log.debug("Transaction points details: " + transactionDetailsDto.get());
+            return ResponseEntity.ok(transactionDetailsDto.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

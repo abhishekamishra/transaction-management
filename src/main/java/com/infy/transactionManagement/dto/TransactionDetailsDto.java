@@ -14,7 +14,7 @@ import java.util.List;
 @ToString
 public class TransactionDetailsDto implements Serializable {
 
-    private Long id;
+    private String customerName;
 
     private List<Long> monthlyAmount;
 
