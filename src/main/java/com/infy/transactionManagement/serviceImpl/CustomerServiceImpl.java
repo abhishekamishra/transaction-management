@@ -136,6 +136,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         try {
             if (customer.isPresent() && !customer.get().getTransactions().isEmpty()) {
+                // sorting transactions details based on id
                 Set<Transaction> transactions = customer.get().getTransactions().stream().sorted(Comparator.comparing(Transaction::getId)).collect(Collectors.toCollection(LinkedHashSet::new));
                 for (Transaction transaction : transactions) {
                     monthlyAmount = calculateMonthlyDiscountPoints(transaction).get();
@@ -157,6 +158,7 @@ public class CustomerServiceImpl implements CustomerService {
         transactionDetailsDto.setMonthlyAmount(monthlyAmounts);
         transactionDetailsDto.setQurterlyAmount(calculateQuarterlyDiscountPoints(monthlyAmounts));
 
+        log.debug("TransactionDetailsDto: {}", transactionDetailsDto);
         return Optional.of(transactionDetailsDto);
     }
 
@@ -173,6 +175,7 @@ public class CustomerServiceImpl implements CustomerService {
         Map<String, Long> map = monthlyAmounts.get(0);
 
         for (Map.Entry<String, Long> entry : map.entrySet()) {
+            // if quarterly month count is grater than 3 (i.e. 4), grater than 6 (i.e. 7), grater than 9 (i.e. 10) then we'll create a new quarter
             if (limit == 4 || limit == 7 || limit == 10) {
                 qurterlyAmounts.add(qurterlyAmount);
             }
@@ -184,6 +187,7 @@ public class CustomerServiceImpl implements CustomerService {
         int i = 1;
         for (Long value : qurterlyAmounts) {
             result.put("Quarter:" + i + " ", value);
+            log.debug("Quarter:" + i + ", Qurterly amount:", value);
             i++;
         }
         return result;
@@ -197,19 +201,17 @@ public class CustomerServiceImpl implements CustomerService {
             Double amount = transaction.getAmount();
 
             if (amount != 0.00 && amount != null) {
-
                 // A customer receives 2 points for every dollar spent over $100 in each transaction
                 if (amount > 100.00) {
-                    monthlyDiscountPoints = (Math.round(amount - 100.00)) * 2;
+                    monthlyDiscountPoints = (long) ((Math.floor(amount - 100.00)) * 2);
                 }
-
                 // 1 point for every dollar spent between $50 and $100 in each transaction
                 // $120 = 2*$20 +1*$50 = 90 pts
                 if (amount >= 100.00) {
                     monthlyDiscountPoints = monthlyDiscountPoints + (1 * 50);
                 }
                 if (amount >= 50.00 && amount < 100.00) {
-                    monthlyDiscountPoints = monthlyDiscountPoints + (1 * (Math.round(100.00 - amount)));
+                    monthlyDiscountPoints = (long) (monthlyDiscountPoints + (1 * (Math.floor(100.00 - amount))));
                 }
             }
         } catch (NullPointerException exception) {
@@ -222,7 +224,7 @@ public class CustomerServiceImpl implements CustomerService {
             exception.printStackTrace();
             throw new MonthlyDiscountPointsException(exception.getLocalizedMessage());
         }
-
+        log.debug("Monthly discount points: {}", monthlyDiscountPoints);
         return Optional.of(monthlyDiscountPoints);
     }
 }
