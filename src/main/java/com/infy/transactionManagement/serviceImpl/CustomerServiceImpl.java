@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,7 +60,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setCustomerId(1l);
         customer.setCustomerName("Ron");
 
-        Set<Transaction> transactions = new HashSet<>();
+        Set<Transaction> transactions = new LinkedHashSet<>();
         Transaction transaction = new Transaction();
         transaction.setMonth("JAN");
         transaction.setAmount(2000.13);
@@ -78,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setCustomerId(2l);
         customer.setCustomerName("Steve");
 
-        transactions = new HashSet<>();
+        transactions = new LinkedHashSet<>();
         transaction = new Transaction();
         transaction.setMonth("JAN");
         transaction.setAmount(888.67);
@@ -90,11 +91,23 @@ public class CustomerServiceImpl implements CustomerService {
         transaction.setAmount(120.00);
         transaction.setCustomer(customer);
         transactions.add(transaction);
+
+        transaction = new Transaction();
+        transaction.setMonth("MAR");
+        transaction.setAmount(7776.70);
+        transaction.setCustomer(customer);
+        transactions.add(transaction);
+
+        transaction = new Transaction();
+        transaction.setMonth("SEP");
+        transaction.setAmount(974.30);
+        transaction.setCustomer(customer);
+        transactions.add(transaction);
         customer.setTransactions(transactions);
         customers.add(customer);
 
         List<Customer> customerDetails = customerRepository.saveAllAndFlush(customers);
-        List<CustomerDto> customerDtos = customerDetails.stream().map(cust -> new CustomerDto(cust.getId(), cust.getCustomerName(), cust.getCustomerId(), getTransactionsDto(cust.getTransactions()))).collect(Collectors.toList());
+        List<CustomerDto> customerDtos = customerDetails.stream().map(cust -> new CustomerDto(cust.getId(), cust.getCustomerName(), cust.getCustomerId(), getTransactionsDto(cust.getTransactions()))).toList();
         return Optional.of(customerDtos);
     }
 
@@ -117,20 +130,24 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         TransactionDetailsDto transactionDetailsDto = new TransactionDetailsDto();
-        Long qurterlyAmount = 0l;
         Long monthlyAmount = 0l;
-        List<Long> monthlyAmounts = new ArrayList<>();
+        List<Map<String, Long>> monthlyAmounts = new ArrayList<>();
+        Map<String, Long> map = new LinkedHashMap<>();
 
         try {
             if (customer.isPresent() && !customer.get().getTransactions().isEmpty()) {
-                for (Transaction transaction : customer.get().getTransactions()) {
-                    monthlyAmount = calculateMonthlyDiscountPoints(transaction).isPresent() ? calculateMonthlyDiscountPoints(transaction).get() : 0l;
+                Set<Transaction> transactions = customer.get().getTransactions().stream().sorted(Comparator.comparing(Transaction::getId)).collect(Collectors.toCollection(LinkedHashSet::new));
+                for (Transaction transaction : transactions) {
+                    monthlyAmount = calculateMonthlyDiscountPoints(transaction).get();
+                    // Monthly amount calculated
                     if (monthlyAmount != null || monthlyAmount != 0l) {
-                        monthlyAmounts.add(monthlyAmount);
-                        qurterlyAmount = qurterlyAmount + monthlyAmount;
+                        log.debug("Month: " + transaction.getMonth() + " amount: " + monthlyAmount);
+                        map.put(transaction.getMonth(), monthlyAmount);
                     }
                 }
+                monthlyAmounts.add(map);
             }
+
         } catch (Exception exception) {
             exception.printStackTrace();
             throw new CalculateDiscountPointsException(exception.getLocalizedMessage());
@@ -138,14 +155,42 @@ public class CustomerServiceImpl implements CustomerService {
 
         transactionDetailsDto.setCustomerName(customer.get().getCustomerName());
         transactionDetailsDto.setMonthlyAmount(monthlyAmounts);
-        transactionDetailsDto.setQurterlyAmount(qurterlyAmount);
+        transactionDetailsDto.setQurterlyAmount(calculateQuarterlyDiscountPoints(monthlyAmounts));
 
         return Optional.of(transactionDetailsDto);
     }
 
+    /***
+     * Quarterly discount points calculated
+     * @param monthlyAmounts
+     * @return Map<String, Long>
+     */
+    private Map<String, Long> calculateQuarterlyDiscountPoints(List<Map<String, Long>> monthlyAmounts) {
+
+        List<Long> qurterlyAmounts = new ArrayList<>();
+        Long qurterlyAmount = 0l;
+        int limit = 1;
+        Map<String, Long> map = monthlyAmounts.get(0);
+
+        for (Map.Entry<String, Long> entry : map.entrySet()) {
+            if (limit == 4 || limit == 7 || limit == 10) {
+                qurterlyAmounts.add(qurterlyAmount);
+            }
+            qurterlyAmount = qurterlyAmount + entry.getValue();
+            limit++;
+        }
+        qurterlyAmounts.add(qurterlyAmount);
+        Map<String, Long> result = new LinkedHashMap<>();
+        int i = 1;
+        for (Long value : qurterlyAmounts) {
+            result.put("Quarter:" + i + " ", value);
+            i++;
+        }
+        return result;
+    }
+
     private Optional<Long> calculateMonthlyDiscountPoints(Transaction transaction) {
 
-        Double value;
         Long monthlyDiscountPoints = 0l;
 
         try {
@@ -155,16 +200,16 @@ public class CustomerServiceImpl implements CustomerService {
 
                 // A customer receives 2 points for every dollar spent over $100 in each transaction
                 if (amount > 100.00) {
-                    value = (amount - 100.00) * 2;
-                    monthlyDiscountPoints = Double.valueOf(value).longValue();
+                    monthlyDiscountPoints = (Math.round(amount - 100.00)) * 2;
                 }
 
                 // 1 point for every dollar spent between $50 and $100 in each transaction
                 // $120 = 2*$20 +1*$50 = 90 pts
                 if (amount >= 100.00) {
                     monthlyDiscountPoints = monthlyDiscountPoints + (1 * 50);
-                } else if (amount >= 50.00 && amount < 100.00) {
-                    monthlyDiscountPoints = monthlyDiscountPoints + (1 * Double.valueOf(100.00 - amount).longValue());
+                }
+                if (amount >= 50.00 && amount < 100.00) {
+                    monthlyDiscountPoints = monthlyDiscountPoints + (1 * (Math.round(100.00 - amount)));
                 }
             }
         } catch (NullPointerException exception) {

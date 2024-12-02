@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +17,7 @@ public class TransactionDetailsDto implements Serializable {
 
     private String customerName;
 
-    private List<Long> monthlyAmount;
+    private List<Map<String,Long>> monthlyAmount;
 
-    private Long qurterlyAmount;
+    private Map<String, Long> qurterlyAmount;
 }
