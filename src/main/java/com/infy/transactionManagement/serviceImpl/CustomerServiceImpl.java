@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,62 +52,43 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Optional<List<CustomerDto>> saveCustomerDetails(CustomerDto customerDto) {
+    public Optional<List<CustomerDto>> saveCustomerDetails(List<CustomerDto> customerDtos) {
+        List<Customer> customerDetails = customerRepository.saveAllAndFlush(createCustomer(customerDtos));
+        List<CustomerDto> customerDtoList = customerDetails.stream().map(cust -> new CustomerDto(cust.getId(), cust.getCustomerName(), cust.getCustomerId(), getTransactionsDto(cust.getTransactions()))).toList();
+        return Optional.of(customerDtoList);
+    }
+
+    private List<Customer> createCustomer(List<CustomerDto> customerDtos) {
 
         List<Customer> customers = new ArrayList<>();
-        Customer customer = new Customer();
-        customer.setCustomerId(1l);
-        customer.setCustomerName("Ron");
+        for (CustomerDto customerDto : customerDtos) {
+            Customer customer = new Customer();
+            customer.setCustomerId(Double.valueOf(generateRandomNumber()).longValue());
+            customer.setCustomerName(customerDto.getCustomerName() == null ? null : customerDto.getCustomerName());
+            customer.setTransactions(createTransaction(customerDto.getTransactions(), customer));
+            customers.add(customer);
+        }
+        return customers;
+    }
+
+    private Set<Transaction> createTransaction(Set<TransactionDto> transactionDtos, Customer customer) {
 
         Set<Transaction> transactions = new LinkedHashSet<>();
-        Transaction transaction = new Transaction();
-        transaction.setMonth("JAN");
-        transaction.setAmount(2000.13);
-        transaction.setCustomer(customer);
-        transactions.add(transaction);
+        for (TransactionDto transactionDto : transactionDtos) {
+            Transaction transaction = new Transaction();
+            transaction.setMonth(transactionDto.getMonth() == null ? null : transactionDto.getMonth());
+            transaction.setAmount(transactionDto.getAmount() == null ? null : transactionDto.getAmount());
+            transaction.setCustomer(customer);
+            transactions.add(transaction);
+        }
+        return transactions;
+    }
 
-        transaction = new Transaction();
-        transaction.setMonth("FEB");
-        transaction.setAmount(769.88);
-        transaction.setCustomer(customer);
-        transactions.add(transaction);
-        customer.setTransactions(transactions);
-        customers.add(customer);
-
-        customer = new Customer();
-        customer.setCustomerId(2l);
-        customer.setCustomerName("Steve");
-
-        transactions = new LinkedHashSet<>();
-        transaction = new Transaction();
-        transaction.setMonth("JAN");
-        transaction.setAmount(888.67);
-        transaction.setCustomer(customer);
-        transactions.add(transaction);
-
-        transaction = new Transaction();
-        transaction.setMonth("FEB");
-        transaction.setAmount(120.00);
-        transaction.setCustomer(customer);
-        transactions.add(transaction);
-
-        transaction = new Transaction();
-        transaction.setMonth("MAR");
-        transaction.setAmount(7776.70);
-        transaction.setCustomer(customer);
-        transactions.add(transaction);
-
-        transaction = new Transaction();
-        transaction.setMonth("SEP");
-        transaction.setAmount(974.30);
-        transaction.setCustomer(customer);
-        transactions.add(transaction);
-        customer.setTransactions(transactions);
-        customers.add(customer);
-
-        List<Customer> customerDetails = customerRepository.saveAllAndFlush(customers);
-        List<CustomerDto> customerDtos = customerDetails.stream().map(cust -> new CustomerDto(cust.getId(), cust.getCustomerName(), cust.getCustomerId(), getTransactionsDto(cust.getTransactions()))).toList();
-        return Optional.of(customerDtos);
+    public double generateRandomNumber() {
+        double max = Math.pow(10, 3) - 1;
+        double min = Math.pow(10, 1 - 1);
+        double range = max - min + 1;
+        return (int) (Math.random() * range) + min;
     }
 
     private Set<TransactionDto> getTransactionsDto(Set<Transaction> transactions) {

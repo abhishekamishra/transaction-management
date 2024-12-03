@@ -10,7 +10,7 @@ public interface CustomerService {
 
     Optional<CustomerDto> getCustomerDetails(Long customerId);
 
-    Optional<List<CustomerDto>> saveCustomerDetails(CustomerDto customerDto);
+    Optional<List<CustomerDto>> saveCustomerDetails(List<CustomerDto> customerDtos);
 
     Optional<TransactionDetailsDto> calculateDiscountPoints(Long customerId);
 }

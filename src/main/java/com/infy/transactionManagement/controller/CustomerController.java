@@ -32,11 +32,11 @@ public class CustomerController {
     }
 
     @PostMapping("/save-customer")
-    public ResponseEntity<List<CustomerDto>> saveCustomerDetails(@RequestBody CustomerDto customerDto) {
-        Optional<List<CustomerDto>> customerDtos = customerService.saveCustomerDetails(customerDto);
-        if (customerDtos.isPresent()) {
-            log.debug("Saved Customers Details: " + customerDtos.get());
-            return ResponseEntity.ok(customerDtos.get());
+    public ResponseEntity<List<CustomerDto>> saveCustomerDetails(@RequestBody List<CustomerDto> customerDtos) {
+        Optional<List<CustomerDto>> customerDetails = customerService.saveCustomerDetails(customerDtos);
+        if (customerDetails.isPresent()) {
+            log.debug("Saved Customers Details: " + customerDetails.get());
+            return ResponseEntity.ok(customerDetails.get());
         } else {
             return ResponseEntity.notFound().build();
         }
