@@ -1,6 +1,7 @@
 package com.infy.transactionManagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class Customer {
     @Column(name = "ID")
     private Long id;
 
+    @NotNull(message = "Customer name is mandatory")
     @Column(name = "customer_name")
     private String customerName;
 

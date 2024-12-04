@@ -3,6 +3,10 @@ package com.infy.transactionManagement.controller;
 import com.infy.transactionManagement.dto.CustomerDto;
 import com.infy.transactionManagement.dto.TransactionDetailsDto;
 import com.infy.transactionManagement.service.CustomerService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +23,10 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @GetMapping("/get-details/{id}")
-    public ResponseEntity<CustomerDto> getCustomerDetails(@PathVariable("id") Long id) {
-
-        Optional<CustomerDto> customerDto = customerService.getCustomerDetails(id);
-        if (customerDto.isPresent()) {
-            log.debug("Customer Details: " + customerDto.get());
-            return ResponseEntity.ok(customerDto.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PostMapping("/save-customer")
-    public ResponseEntity<List<CustomerDto>> saveCustomerDetails(@RequestBody List<CustomerDto> customerDtos) {
+    @PostMapping("/save-customers")
+    public ResponseEntity<List<CustomerDto>> saveCustomerDetails(@Valid @RequestBody List<CustomerDto> customerDtos) {
         Optional<List<CustomerDto>> customerDetails = customerService.saveCustomerDetails(customerDtos);
-        if (customerDetails.isPresent()) {
+        if (customerDetails.isPresent() && !customerDetails.get().isEmpty()) {
             log.debug("Saved Customers Details: " + customerDetails.get());
             return ResponseEntity.ok(customerDetails.get());
         } else {
@@ -43,7 +35,7 @@ public class CustomerController {
     }
 
     @GetMapping("/calculate-points/{id}")
-    public ResponseEntity<TransactionDetailsDto> calculateDiscountPoints(@PathVariable("id") Long id) {
+    public ResponseEntity<TransactionDetailsDto> calculateDiscountPoints(@NotNull @PathVariable("id") @Min(1) @Max(7) Long id) {
 
         Optional<TransactionDetailsDto> transactionDetailsDto = customerService.calculateDiscountPoints(id);
         if (transactionDetailsDto.isPresent()) {

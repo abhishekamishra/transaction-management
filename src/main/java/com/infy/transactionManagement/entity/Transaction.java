@@ -1,6 +1,7 @@
 package com.infy.transactionManagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -16,9 +17,11 @@ public class Transaction {
     @Column(name = "ID")
     private Long id;
 
+    @NotNull(message = "Month is mandatory")
     @Column(name = "month")
     private String month;
 
+    @NotNull(message = "Amount is mandatory")
     @Column(name = "amount")
     private Double amount;
 
