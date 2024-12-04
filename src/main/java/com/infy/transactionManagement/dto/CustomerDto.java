@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
@@ -24,5 +25,5 @@ public class CustomerDto implements Serializable {
 
     private Long customerId;
 
-    private Set<TransactionDto> transactions;
+    private LinkedHashSet<TransactionDto> transactions;
 }

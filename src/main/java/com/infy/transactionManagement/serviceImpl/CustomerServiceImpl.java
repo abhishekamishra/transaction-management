@@ -55,9 +55,9 @@ public class CustomerServiceImpl implements CustomerService {
         return customers;
     }
 
-    private Set<Transaction> createTransaction(Set<TransactionDto> transactionDtos, Customer customer) {
+    private LinkedHashSet<Transaction> createTransaction(Set<TransactionDto> transactionDtos, Customer customer) {
 
-        Set<Transaction> transactions = new LinkedHashSet<>();
+        LinkedHashSet<Transaction> transactions = new LinkedHashSet<>();
         for (TransactionDto transactionDto : transactionDtos) {
             Transaction transaction = new Transaction();
             transaction.setMonth(transactionDto.getMonth() == null ? null : transactionDto.getMonth());
@@ -75,8 +75,8 @@ public class CustomerServiceImpl implements CustomerService {
         return (int) (Math.random() * range) + min;
     }
 
-    private Set<TransactionDto> getTransactionsDto(Set<Transaction> transactions) {
-        return transactions.stream().map(t -> new TransactionDto(t.getId() == null ? null : t.getId(), t.getMonth() == null ? null : t.getMonth(), t.getAmount() == null ? null : t.getAmount(), t.getCustomer() == null ? null : t.getCustomer().getCustomerId())).collect(Collectors.toSet());
+    private LinkedHashSet<TransactionDto> getTransactionsDto(Set<Transaction> transactions) {
+        return transactions.stream().map(t -> new TransactionDto(t.getId() == null ? null : t.getId(), t.getMonth() == null ? null : t.getMonth(), t.getAmount() == null ? null : t.getAmount(), t.getCustomer() == null ? null : t.getCustomer().getCustomerId())).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     @Override
@@ -161,6 +161,7 @@ public class CustomerServiceImpl implements CustomerService {
             // if quarterly month count is grater than 3 (i.e. 4), grater than 6 (i.e. 7), grater than 9 (i.e. 10) then we'll create a new quarter
             if (limit == 4 || limit == 7 || limit == 10) {
                 qurterlyAmounts.add(qurterlyAmount);
+                qurterlyAmount = 0l;
             }
             qurterlyAmount = qurterlyAmount + entry.getValue();
             limit++;

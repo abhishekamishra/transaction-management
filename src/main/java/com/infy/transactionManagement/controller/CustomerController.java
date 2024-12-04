@@ -4,8 +4,6 @@ import com.infy.transactionManagement.dto.CustomerDto;
 import com.infy.transactionManagement.dto.TransactionDetailsDto;
 import com.infy.transactionManagement.service.CustomerService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +33,11 @@ public class CustomerController {
     }
 
     @GetMapping("/calculate-points/{id}")
-    public ResponseEntity<TransactionDetailsDto> calculateDiscountPoints(@NotNull @PathVariable("id") @Min(1) @Max(7) Long id) {
+    public ResponseEntity<TransactionDetailsDto> calculateDiscountPoints(@NotNull @PathVariable("id") Long id) {
 
         Optional<TransactionDetailsDto> transactionDetailsDto = customerService.calculateDiscountPoints(id);
         if (transactionDetailsDto.isPresent()) {
-            log.debug("Transaction points details: " + transactionDetailsDto.get());
+            log.info("Discount points for user id {} calculated successfully for Transaction: {}", id, transactionDetailsDto.get());
             return ResponseEntity.ok(transactionDetailsDto.get());
         } else {
             return ResponseEntity.notFound().build();
