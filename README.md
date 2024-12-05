@@ -141,14 +141,10 @@ Request:
 {
 "JAN": 1626,
 "FEB": 90,
-"MAR": 15402,
-"SEP": 1798
+"MAR": 15402
 }
 ],
-"qurterlyAmount": {
-"Quarter:1 ": 17118,
-"Quarter:2 ": 18916
-}
+"qurterlyAmount": 17118
 }
 
 

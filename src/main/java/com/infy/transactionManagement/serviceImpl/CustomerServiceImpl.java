@@ -101,12 +101,16 @@ public class CustomerServiceImpl implements CustomerService {
         List<Map<String, Long>> monthlyAmounts = new ArrayList<>();
         try {
             Long monthlyAmount = 0l;
+            int flag =1;
             Map<String, Long> map = new LinkedHashMap<>();
 
             if (customer.isPresent() && !customer.get().getTransactions().isEmpty()) {
                 // sorting transactions details based on id
                 Set<Transaction> transactions = customer.get().getTransactions().stream().sorted(Comparator.comparing(Transaction::getId)).collect(Collectors.toCollection(LinkedHashSet::new));
                 for (Transaction transaction : transactions) {
+                    if(flag > 3){
+                        continue;
+                    }
                     Optional<Long> monthlyAmountValue = calculateMonthlyDiscountPoints(transaction);
                     monthlyAmount = monthlyAmountValue.isPresent() ? monthlyAmountValue.get() : 0l;
                     // Monthly amount calculated
@@ -114,6 +118,7 @@ public class CustomerServiceImpl implements CustomerService {
                         log.debug("Month: " + transaction.getMonth() + " amount: " + monthlyAmount);
                         map.put(transaction.getMonth(), monthlyAmount);
                     }
+                    flag++;
                 }
                 monthlyAmounts.add(map);
             }
@@ -147,34 +152,17 @@ public class CustomerServiceImpl implements CustomerService {
 
     /***
      * Quarterly discount points calculated
-     * @param monthlyAmounts
-     * @return Map<String, Long>
      */
-    private Map<String, Long> calculateQuarterlyDiscountPoints(List<Map<String, Long>> monthlyAmounts) {
+    private Long calculateQuarterlyDiscountPoints(List<Map<String, Long>> monthlyAmounts) {
 
-        List<Long> qurterlyAmounts = new ArrayList<>();
         Long qurterlyAmount = 0l;
-        int limit = 1;
         Map<String, Long> map = monthlyAmounts.get(0);
 
         for (Map.Entry<String, Long> entry : map.entrySet()) {
-            // if quarterly month count is grater than 3 (i.e. 4), grater than 6 (i.e. 7), grater than 9 (i.e. 10) then we'll create a new quarter
-            if (limit == 4 || limit == 7 || limit == 10) {
-                qurterlyAmounts.add(qurterlyAmount);
-                qurterlyAmount = 0l;
-            }
             qurterlyAmount = qurterlyAmount + entry.getValue();
-            limit++;
         }
-        qurterlyAmounts.add(qurterlyAmount);
-        Map<String, Long> result = new LinkedHashMap<>();
-        int i = 1;
-        for (Long value : qurterlyAmounts) {
-            result.put("Quarter:" + i + " ", value);
-            log.debug("Quarter: {}, Quarterly amount: {}", i, value);
-            i++;
-        }
-        return result;
+
+        return qurterlyAmount;
     }
 
     private Optional<Long> calculateMonthlyDiscountPoints(Transaction transaction) {

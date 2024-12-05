@@ -19,5 +19,5 @@ public class TransactionDetailsDto implements Serializable {
 
     private List<Map<String,Long>> monthlyAmount;
 
-    private Map<String, Long> qurterlyAmount;
+    private Long qurterlyAmount;
 }
