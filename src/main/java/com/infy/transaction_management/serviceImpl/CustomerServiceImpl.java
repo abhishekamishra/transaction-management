@@ -69,7 +69,7 @@ public class CustomerServiceImpl implements CustomerService {
         return transactions;
     }
 
-    public double generateRandomNumber() {
+    private double generateRandomNumber() {
         double max = Math.pow(10, 3) - 1;
         double min = Math.pow(10, 1 - 1);
         double range = max - min + 1;
@@ -91,7 +91,7 @@ public class CustomerServiceImpl implements CustomerService {
             transactionDetailsDto.setCustomerId(customer.get().getCustomerId());
             transactionDetailsDto.setCustomerName(customer.get().getCustomerName());
             transactionDetailsDto.setMonthlyDetails(monthlyAmounts);
-            transactionDetailsDto.setQurterlyRewardPoints(calculateQuarterlyDiscountPoints(monthlyAmounts) == null ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
+            transactionDetailsDto.setSumOfQurterlyRewardPoints(calculateQuarterlyDiscountPoints(monthlyAmounts) == null ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
 
             log.debug("TransactionDetailsDto: {}", transactionDetailsDto);
             return Optional.of(transactionDetailsDto);

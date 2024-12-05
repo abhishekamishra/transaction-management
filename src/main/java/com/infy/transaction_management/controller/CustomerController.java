@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class CustomerController {
         Optional<List<CustomerDto>> customerDetails = customerService.saveCustomerDetails(customerDtos);
         if (customerDetails.isPresent() && !customerDetails.get().isEmpty()) {
             log.debug("Saved Customers Details: " + customerDetails.get());
-            return ResponseEntity.ok(customerDetails.get());
+            return ResponseEntity.status(HttpStatus.CREATED).body(customerDetails.get());
         } else {
             return ResponseEntity.notFound().build();
         }

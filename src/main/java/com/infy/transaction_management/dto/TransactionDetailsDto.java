@@ -17,5 +17,5 @@ public class TransactionDetailsDto implements Serializable {
     private Long customerId;
     private String customerName;
     private List<MonthlyAmountDto> monthlyDetails;
-    private Long qurterlyRewardPoints;
+    private Long sumOfQurterlyRewardPoints;
 }
