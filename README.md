@@ -124,17 +124,17 @@ Request:
 "monthlyDetails": [
 {
 "month": "JAN",
-"amount": 888.67,
+"amount": "$888.67",
 "rewardPoints": 1626
 },
 {
 "month": "FEB",
-"amount": 120.0,
+"amount": "$120.0",
 "rewardPoints": 90
 },
 {
 "month": "MAR",
-"amount": 7776.7,
+"amount": "$7776.7",
 "rewardPoints": 15402
 }
 ],

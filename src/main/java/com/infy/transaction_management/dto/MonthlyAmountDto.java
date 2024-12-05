@@ -13,6 +13,6 @@ import java.io.Serializable;
 @ToString
 public class MonthlyAmountDto implements Serializable {
     private String month;
-    private Double amount;
+    private String amount;
     private Long rewardPoints;
 }

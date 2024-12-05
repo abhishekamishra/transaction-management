@@ -119,7 +119,7 @@ public class CustomerServiceImpl implements CustomerService {
                     if (monthlyRewardPoints != 0l) {
                         monthlyAmountDto.setMonth(transaction.getMonth());
                         monthlyAmountDto.setRewardPoints(monthlyRewardPoints);
-                        monthlyAmountDto.setAmount(transaction.getAmount());
+                        monthlyAmountDto.setAmount(transaction.getAmount() == null ? "$" + String.valueOf(0l) : "$" + transaction.getAmount().toString());
                         log.info("MonthlyAmountDto: {}", monthlyAmountDto);
                         monthlyAmountList.add(monthlyAmountDto);
                     }
