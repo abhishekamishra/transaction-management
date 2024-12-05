@@ -1,4 +1,4 @@
-# Project Name
+# Transaction Management
 
 transaction-management:  This application has the functionality where it will calculate the points earned per each transaction.
 ex: $120 = 2*$20 + 1*$50 = 90pts
@@ -16,7 +16,7 @@ ex: $120 = 2*$20 + 1*$50 = 90pts
 
 ## Description
 
-This application has the functionality where it will calculate the points earned per each transaction. Here I have used Java 17, Springboot, JPA, PostgreSql.
+This application has the functionality where it will calculate the points earned per each transaction. Here I have used Java 17, Springboot, JPA, PostgreSql, Junit5 and Mockito.
 
 This application has 2 end-points.
 1. /customer/save-customers : This end-point will add customer details into database.
@@ -117,7 +117,7 @@ Result:
 
 Request:
 [GET] http://localhost:8080/customer/calculate-points/371
-
+Result:
 {
 "customerId": 371,
 "customerName": "Steve",
