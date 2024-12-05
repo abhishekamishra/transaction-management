@@ -116,35 +116,29 @@ Result:
 ]
 
 Request:
-[GET] http://localhost:8080/customer/calculate-points/94
-
-Result:
-{
-"customerName": "Ron",
-"monthlyAmount": [
-{
-"JAN": 3850,
-"FEB": 1388
-}
-],
-"qurterlyAmount": {
-"Quarter:1 ": 5238
-}
-}
-
-Request:
 [GET] http://localhost:8080/customer/calculate-points/371
 
 {
+"customerId": 371,
 "customerName": "Steve",
-"monthlyAmount": [
+"monthlyDetails": [
 {
-"JAN": 1626,
-"FEB": 90,
-"MAR": 15402
+"month": "JAN",
+"amount": 888.67,
+"rewardPoints": 1626
+},
+{
+"month": "FEB",
+"amount": 120.0,
+"rewardPoints": 90
+},
+{
+"month": "MAR",
+"amount": 7776.7,
+"rewardPoints": 15402
 }
 ],
-"qurterlyAmount": 17118
+"qurterlyRewardPoints": 17118
 }
 
 

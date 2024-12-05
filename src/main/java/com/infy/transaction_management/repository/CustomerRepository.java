@@ -1,6 +1,6 @@
-package com.infy.transactionManagement.repository;
+package com.infy.transaction_management.repository;
 
-import com.infy.transactionManagement.entity.Customer;
+import com.infy.transaction_management.entity.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

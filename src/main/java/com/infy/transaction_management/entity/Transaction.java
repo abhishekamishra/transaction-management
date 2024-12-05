@@ -1,4 +1,4 @@
-package com.infy.transactionManagement.entity;
+package com.infy.transaction_management.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

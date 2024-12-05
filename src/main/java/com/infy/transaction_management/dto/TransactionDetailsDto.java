@@ -1,4 +1,4 @@
-package com.infy.transactionManagement.dto;
+package com.infy.transaction_management.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,6 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -15,9 +14,8 @@ import java.util.Map;
 @ToString
 public class TransactionDetailsDto implements Serializable {
 
+    private Long customerId;
     private String customerName;
-
-    private List<Map<String,Long>> monthlyAmount;
-
-    private Long qurterlyAmount;
+    private List<MonthlyAmountDto> monthlyDetails;
+    private Long qurterlyRewardPoints;
 }

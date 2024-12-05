@@ -1,4 +1,4 @@
-package com.infy.transactionManagement.dto;
+package com.infy.transaction_management.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;

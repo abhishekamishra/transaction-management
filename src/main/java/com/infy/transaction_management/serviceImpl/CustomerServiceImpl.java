@@ -1,16 +1,17 @@
-package com.infy.transactionManagement.serviceImpl;
+package com.infy.transaction_management.serviceImpl;
 
-import com.infy.transactionManagement.dto.CustomerDto;
-import com.infy.transactionManagement.dto.TransactionDetailsDto;
-import com.infy.transactionManagement.dto.TransactionDto;
-import com.infy.transactionManagement.entity.Customer;
-import com.infy.transactionManagement.entity.Transaction;
-import com.infy.transactionManagement.exception.CalculateDiscountPointsException;
-import com.infy.transactionManagement.exception.CustomerNotFoundException;
-import com.infy.transactionManagement.exception.MonthlyDiscountPointsArithmeticException;
-import com.infy.transactionManagement.exception.MonthlyDiscountPointsException;
-import com.infy.transactionManagement.repository.CustomerRepository;
-import com.infy.transactionManagement.service.CustomerService;
+import com.infy.transaction_management.dto.CustomerDto;
+import com.infy.transaction_management.dto.MonthlyAmountDto;
+import com.infy.transaction_management.dto.TransactionDetailsDto;
+import com.infy.transaction_management.dto.TransactionDto;
+import com.infy.transaction_management.entity.Customer;
+import com.infy.transaction_management.entity.Transaction;
+import com.infy.transaction_management.exception.CalculateDiscountPointsException;
+import com.infy.transaction_management.exception.CustomerNotFoundException;
+import com.infy.transaction_management.exception.MonthlyDiscountPointsArithmeticException;
+import com.infy.transaction_management.exception.MonthlyDiscountPointsException;
+import com.infy.transaction_management.repository.CustomerRepository;
+import com.infy.transaction_management.service.CustomerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,12 +85,13 @@ public class CustomerServiceImpl implements CustomerService {
 
         Optional<Customer> customer = validateCustomer(customerId);
         if (customer.isPresent()) {
-            List<Map<String, Long>> monthlyAmounts = calculateMonthlyAmounts(customer);
+            List<MonthlyAmountDto> monthlyAmounts = calculateMonthlyAmounts(customer);
 
             TransactionDetailsDto transactionDetailsDto = new TransactionDetailsDto();
+            transactionDetailsDto.setCustomerId(customer.get().getCustomerId());
             transactionDetailsDto.setCustomerName(customer.get().getCustomerName());
-            transactionDetailsDto.setMonthlyAmount(monthlyAmounts);
-            transactionDetailsDto.setQurterlyAmount(calculateQuarterlyDiscountPoints(monthlyAmounts));
+            transactionDetailsDto.setMonthlyDetails(monthlyAmounts);
+            transactionDetailsDto.setQurterlyRewardPoints(calculateQuarterlyDiscountPoints(monthlyAmounts) == null ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
 
             log.debug("TransactionDetailsDto: {}", transactionDetailsDto);
             return Optional.of(transactionDetailsDto);
@@ -97,36 +99,38 @@ public class CustomerServiceImpl implements CustomerService {
         return Optional.empty();
     }
 
-    private List<Map<String, Long>> calculateMonthlyAmounts(Optional<Customer> customer) {
-        List<Map<String, Long>> monthlyAmounts = new ArrayList<>();
+    private List<MonthlyAmountDto> calculateMonthlyAmounts(Optional<Customer> customer) {
+        List<MonthlyAmountDto> monthlyAmountList = new ArrayList<>();
+        MonthlyAmountDto monthlyAmountDto = null;
         try {
-            Long monthlyAmount = 0l;
-            int flag =1;
-            Map<String, Long> map = new LinkedHashMap<>();
-
+            Long monthlyRewardPoints;
+            int flag = 1;
             if (customer.isPresent() && !customer.get().getTransactions().isEmpty()) {
                 // sorting transactions details based on id
                 Set<Transaction> transactions = customer.get().getTransactions().stream().sorted(Comparator.comparing(Transaction::getId)).collect(Collectors.toCollection(LinkedHashSet::new));
                 for (Transaction transaction : transactions) {
-                    if(flag > 3){
+                    monthlyAmountDto = new MonthlyAmountDto();
+                    if (flag > 3) {
                         continue;
                     }
                     Optional<Long> monthlyAmountValue = calculateMonthlyDiscountPoints(transaction);
-                    monthlyAmount = monthlyAmountValue.isPresent() ? monthlyAmountValue.get() : 0l;
+                    monthlyRewardPoints = monthlyAmountValue.isPresent() ? monthlyAmountValue.get() : 0l;
                     // Monthly amount calculated
-                    if (monthlyAmount != 0l) {
-                        log.debug("Month: " + transaction.getMonth() + " amount: " + monthlyAmount);
-                        map.put(transaction.getMonth(), monthlyAmount);
+                    if (monthlyRewardPoints != 0l) {
+                        monthlyAmountDto.setMonth(transaction.getMonth());
+                        monthlyAmountDto.setRewardPoints(monthlyRewardPoints);
+                        monthlyAmountDto.setAmount(transaction.getAmount());
+                        log.info("MonthlyAmountDto: {}", monthlyAmountDto);
+                        monthlyAmountList.add(monthlyAmountDto);
                     }
                     flag++;
                 }
-                monthlyAmounts.add(map);
             }
         } catch (Exception exception) {
             exception.printStackTrace();
             throw new CalculateDiscountPointsException(exception.getLocalizedMessage());
         }
-        return monthlyAmounts;
+        return monthlyAmountList;
     }
 
     private Optional<Customer> validateCustomer(Long customerId) {
@@ -153,22 +157,18 @@ public class CustomerServiceImpl implements CustomerService {
     /***
      * Quarterly discount points calculated
      */
-    private Long calculateQuarterlyDiscountPoints(List<Map<String, Long>> monthlyAmounts) {
+    private Long calculateQuarterlyDiscountPoints(List<MonthlyAmountDto> monthlyAmounts) {
 
         Long qurterlyAmount = 0l;
-        Map<String, Long> map = monthlyAmounts.get(0);
-
-        for (Map.Entry<String, Long> entry : map.entrySet()) {
-            qurterlyAmount = qurterlyAmount + entry.getValue();
+        for (MonthlyAmountDto monthlyAmountDto : monthlyAmounts) {
+            qurterlyAmount = qurterlyAmount + monthlyAmountDto.getRewardPoints();
         }
-
         return qurterlyAmount;
     }
 
     private Optional<Long> calculateMonthlyDiscountPoints(Transaction transaction) {
 
         long monthlyDiscountPoints = 0l;
-
         try {
             Double amount = transaction.getAmount();
 

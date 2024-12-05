@@ -1,8 +1,8 @@
-package com.infy.transactionManagement.controller;
+package com.infy.transaction_management.controller;
 
-import com.infy.transactionManagement.dto.CustomerDto;
-import com.infy.transactionManagement.dto.TransactionDetailsDto;
-import com.infy.transactionManagement.service.CustomerService;
+import com.infy.transaction_management.dto.CustomerDto;
+import com.infy.transaction_management.dto.TransactionDetailsDto;
+import com.infy.transaction_management.service.CustomerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;

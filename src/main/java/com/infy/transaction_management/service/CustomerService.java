@@ -1,7 +1,7 @@
-package com.infy.transactionManagement.service;
+package com.infy.transaction_management.service;
 
-import com.infy.transactionManagement.dto.CustomerDto;
-import com.infy.transactionManagement.dto.TransactionDetailsDto;
+import com.infy.transaction_management.dto.CustomerDto;
+import com.infy.transaction_management.dto.TransactionDetailsDto;
 
 import java.util.List;
 import java.util.Optional;

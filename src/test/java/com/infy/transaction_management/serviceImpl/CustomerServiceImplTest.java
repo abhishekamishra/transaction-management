@@ -1,9 +1,10 @@
-package com.infy.transactionManagement.serviceImpl;
+package com.infy.transaction_management.serviceImpl;
 
-import com.infy.transactionManagement.dto.TransactionDetailsDto;
-import com.infy.transactionManagement.entity.Customer;
-import com.infy.transactionManagement.entity.Transaction;
-import com.infy.transactionManagement.repository.CustomerRepository;
+import com.infy.transaction_management.dto.MonthlyAmountDto;
+import com.infy.transaction_management.dto.TransactionDetailsDto;
+import com.infy.transaction_management.entity.Customer;
+import com.infy.transaction_management.entity.Transaction;
+import com.infy.transaction_management.repository.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -11,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -73,16 +74,16 @@ class CustomerServiceImplTest {
 
         when(customerRepository.findByCustomerId(1l)).thenReturn(Optional.of(customer));
         Optional<TransactionDetailsDto> transactionDetailsDto = customerServiceImpl.calculateDiscountPoints(1l);
-        Map<String, Long> map = transactionDetailsDto.get().getMonthlyAmount().get(0);
+        List<MonthlyAmountDto> monthlyAmountDtos = transactionDetailsDto.get().getMonthlyDetails();
 
         assertNotNull(transactionDetailsDto.get());
 
         // monthly points
-        assertEquals(90, map.entrySet().stream().map(cust -> cust.getValue()).findFirst().get());
-        assertEquals(1848, map.entrySet().stream().map(cust -> cust.getValue()).skip(1).findFirst().get());
-        assertEquals(3384, map.entrySet().stream().map(cust -> cust.getValue()).skip(2).findFirst().get());
+        assertEquals(90, monthlyAmountDtos.stream().map(cust -> cust.getRewardPoints()).findFirst().get());
+        assertEquals(1848, monthlyAmountDtos.stream().map(cust -> cust.getRewardPoints()).skip(1).findFirst().get());
+        assertEquals(3384, monthlyAmountDtos.stream().map(cust -> cust.getRewardPoints()).skip(2).findFirst().get());
 
         // quarterly points
-        assertEquals(5322, transactionDetailsDto.get().getQurterlyAmount().entrySet().stream().map(e -> e.getValue()).findFirst().get());
+        assertEquals(5322, transactionDetailsDto.get().getQurterlyRewardPoints());
     }
 }

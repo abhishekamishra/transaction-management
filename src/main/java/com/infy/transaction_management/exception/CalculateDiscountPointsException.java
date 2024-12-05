@@ -1,4 +1,4 @@
-package com.infy.transactionManagement.exception;
+package com.infy.transaction_management.exception;
 
 public class CalculateDiscountPointsException extends RuntimeException {
     private String message;

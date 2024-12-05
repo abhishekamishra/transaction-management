@@ -1,4 +1,4 @@
-package com.infy.transactionManagement.exception;
+package com.infy.transaction_management.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

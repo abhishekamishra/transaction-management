@@ -1,4 +1,4 @@
-package com.infy.transactionManagement.dto;
+package com.infy.transaction_management.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -9,7 +9,6 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
