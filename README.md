@@ -115,8 +115,7 @@ This application has 2 end-points.
       }
       ]
    
-      Request:
-      [GET] http://localhost:8080/customer/calculate-points/371
+      Request:[GET] http://localhost:8080/customer/calculate-points/371
    
       Result:
       {
