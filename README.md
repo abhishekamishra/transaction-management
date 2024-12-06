@@ -9,8 +9,9 @@ ex: $120 = 2*$20 + 1*$50 = 90pts
 
 1. [Description](#description)
 2. [Installation](#installation)
+3. [Test Results](#installation)
 4. [Contributing](#contributing)
-6. [Contact](#contact)
+5. [Contact](#contact)
 
 ---
 
@@ -154,6 +155,10 @@ Follow these steps to install and set up your project:
    git clone https://github.com/abhishekamishra/transaction-management
    
 2. Run the application
+
+## Test Results
+
+Test cases screenshots are added under test-screenshots(https://github.com/abhishekamishra/transaction-management/tree/master/test-screenshots) folder.
 
 ## Contributing
 
