@@ -171,19 +171,14 @@ public class CustomerServiceImpl implements CustomerService {
         long monthlyDiscountPoints = 0l;
         try {
             Double amount = transaction.getAmount();
-
-            if (amount != 0.00 && amount != null) {
-                // A customer receives 2 points for every dollar spent over $100 in each transaction
-                if (amount > 100.00) {
-                    monthlyDiscountPoints = (long) ((Math.floor(amount - 100.00)) * 2);
-                }
-                // 1 point for every dollar spent between $50 and $100 in each transaction
-                // $120 = 2*$20 +1*$50 = 90 pts
-                if (amount >= 100.00) {
-                    monthlyDiscountPoints = monthlyDiscountPoints + 50;
-                }
-                if (amount >= 50.00 && amount < 100.00) {
-                    monthlyDiscountPoints = (long) (monthlyDiscountPoints + (Math.floor(100.00 - amount)));
+            // ex: $120 = 2*$20 +1*$50 = 90 pts
+            if (null != amount && amount != 0.00) {
+                // 1 point for every dollar spent between $50 and $100 in each transaction.
+                if (amount > 50.00 && amount <= 100.00) {
+                    monthlyDiscountPoints = (long) (Math.floor(amount - 50.00));
+                } // A customer receives 2 points for every dollar spent over $100 in each transaction
+                else if (amount > 100.00) {
+                    monthlyDiscountPoints = (long) Double.sum(50.00, (Math.floor(amount - 100.00)) * 2);
                 }
             }
         } catch (NullPointerException exception) {
