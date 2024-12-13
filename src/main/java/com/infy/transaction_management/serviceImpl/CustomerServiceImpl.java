@@ -3,21 +3,18 @@ package com.infy.transaction_management.serviceImpl;
 import com.infy.transaction_management.dto.CustomerDto;
 import com.infy.transaction_management.dto.MonthlyAmountDto;
 import com.infy.transaction_management.dto.TransactionDetailsDto;
-import com.infy.transaction_management.dto.TransactionDto;
 import com.infy.transaction_management.entity.Customer;
 import com.infy.transaction_management.entity.Transaction;
-import com.infy.transaction_management.exception.CalculateDiscountPointsException;
-import com.infy.transaction_management.exception.CustomerNotFoundException;
-import com.infy.transaction_management.exception.MonthlyDiscountPointsArithmeticException;
-import com.infy.transaction_management.exception.MonthlyDiscountPointsException;
 import com.infy.transaction_management.repository.CustomerRepository;
 import com.infy.transaction_management.service.CustomerService;
+import com.infy.transaction_management.util.CustomerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -32,52 +29,15 @@ public class CustomerServiceImpl implements CustomerService {
         if (!customerDtos.isEmpty()) {
             try {
                 // saving customer details to database
-                List<Customer> customerDetails = customerRepository.saveAllAndFlush(createCustomer(customerDtos));
+                List<Customer> customerDetails = customerRepository.saveAllAndFlush(CustomerUtil.createCustomer(customerDtos));
                 // converting customer objects into customerdtos
-                customerDtoList = customerDetails.stream().map(cust -> new CustomerDto(cust.getId() == null ? null : cust.getId(), cust.getCustomerName() == null ? null : cust.getCustomerName(), cust.getCustomerId() == null ? null : cust.getCustomerId(), cust.getTransactions() == null ? null : getTransactionsDto(cust.getTransactions()))).toList();
+                customerDtoList = customerDetails.stream().map(cust -> new CustomerDto(cust.getId() == null ? null : cust.getId(), cust.getCustomerName() == null ? null : cust.getCustomerName(), cust.getCustomerId() == null ? null : cust.getCustomerId(), cust.getTransactions() == null ? null : CustomerUtil.getTransactionsDto(cust.getTransactions()))).toList();
             } catch (Exception exception) {
-                exception.printStackTrace();
                 log.error("Error occurred while saving customer details to database as {}", exception.getLocalizedMessage());
+                exception.printStackTrace();
             }
         }
         return Optional.of(customerDtoList);
-    }
-
-    private List<Customer> createCustomer(List<CustomerDto> customerDtos) {
-
-        List<Customer> customers = new ArrayList<>();
-        for (CustomerDto customerDto : customerDtos) {
-            Customer customer = new Customer();
-            customer.setCustomerId(Double.valueOf(generateRandomNumber()).longValue());
-            customer.setCustomerName(customerDto.getCustomerName() == null ? null : customerDto.getCustomerName());
-            customer.setTransactions(createTransaction(customerDto.getTransactions(), customer));
-            customers.add(customer);
-        }
-        return customers;
-    }
-
-    private LinkedHashSet<Transaction> createTransaction(Set<TransactionDto> transactionDtos, Customer customer) {
-
-        LinkedHashSet<Transaction> transactions = new LinkedHashSet<>();
-        for (TransactionDto transactionDto : transactionDtos) {
-            Transaction transaction = new Transaction();
-            transaction.setMonth(transactionDto.getMonth() == null ? null : transactionDto.getMonth());
-            transaction.setAmount(transactionDto.getAmount() == null ? null : transactionDto.getAmount());
-            transaction.setCustomer(customer);
-            transactions.add(transaction);
-        }
-        return transactions;
-    }
-
-    private double generateRandomNumber() {
-        double max = Math.pow(10, 3) - 1;
-        double min = Math.pow(10, 1 - 1);
-        double range = max - min + 1;
-        return (int) (Math.random() * range) + min;
-    }
-
-    private LinkedHashSet<TransactionDto> getTransactionsDto(Set<Transaction> transactions) {
-        return transactions.stream().map(t -> new TransactionDto(t.getId() == null ? null : t.getId(), t.getMonth() == null ? null : t.getMonth(), t.getAmount() == null ? null : t.getAmount(), t.getCustomer() == null ? null : t.getCustomer().getCustomerId())).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     @Override
@@ -85,71 +45,58 @@ public class CustomerServiceImpl implements CustomerService {
 
         Optional<Customer> customer = validateCustomer(customerId);
         if (customer.isPresent()) {
+            TransactionDetailsDto transactionDetailsDto = new TransactionDetailsDto();
+            transactionDetailsDto.setCustomerId(customer.get().getCustomerId() == null ? null : customer.get().getCustomerId());
+            transactionDetailsDto.setCustomerName(customer.get().getCustomerName() == null ? null : customer.get().getCustomerName());
+
             List<MonthlyAmountDto> monthlyAmounts = calculateMonthlyAmounts(customer);
 
-            TransactionDetailsDto transactionDetailsDto = new TransactionDetailsDto();
-            transactionDetailsDto.setCustomerId(customer.get().getCustomerId());
-            transactionDetailsDto.setCustomerName(customer.get().getCustomerName());
-            transactionDetailsDto.setMonthlyDetails(monthlyAmounts);
-            transactionDetailsDto.setSumOfQurterlyRewardPoints(calculateQuarterlyDiscountPoints(monthlyAmounts) == null ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
+            transactionDetailsDto.setMonthlyDetails(monthlyAmounts.size() == 0 ? null : monthlyAmounts);
+            transactionDetailsDto.setSumOfQurterlyRewardPoints(monthlyAmounts.size() == 0 ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
 
-            log.debug("TransactionDetailsDto: {}", transactionDetailsDto);
+            log.info("TransactionDetailsDto: {}", transactionDetailsDto);
             return Optional.of(transactionDetailsDto);
         }
+        log.info("Customer details for customer id {} is not present. So could not proceed with rewards points calculation.", customerId);
         return Optional.empty();
     }
 
     private List<MonthlyAmountDto> calculateMonthlyAmounts(Optional<Customer> customer) {
         List<MonthlyAmountDto> monthlyAmountList = new ArrayList<>();
-        MonthlyAmountDto monthlyAmountDto = null;
+
         try {
-            Long monthlyRewardPoints;
-            int flag = 1;
             if (customer.isPresent() && !customer.get().getTransactions().isEmpty()) {
-                // sorting transactions details based on id
-                Set<Transaction> transactions = customer.get().getTransactions().stream().sorted(Comparator.comparing(Transaction::getId)).collect(Collectors.toCollection(LinkedHashSet::new));
-                for (Transaction transaction : transactions) {
-                    monthlyAmountDto = new MonthlyAmountDto();
-                    if (flag > 3) {
-                        continue;
-                    }
-                    Optional<Long> monthlyAmountValue = calculateMonthlyDiscountPoints(transaction);
-                    monthlyRewardPoints = monthlyAmountValue.isPresent() ? monthlyAmountValue.get() : 0l;
-                    // Monthly amount calculated
-                    if (monthlyRewardPoints != 0l) {
-                        monthlyAmountDto.setMonth(transaction.getMonth());
-                        monthlyAmountDto.setRewardPoints(monthlyRewardPoints);
-                        monthlyAmountDto.setAmount(transaction.getAmount() == null ? "$" + String.valueOf(0l) : "$" + transaction.getAmount().toString());
-                        log.info("MonthlyAmountDto: {}", monthlyAmountDto);
-                        monthlyAmountList.add(monthlyAmountDto);
-                    }
-                    flag++;
+
+                for (Transaction transaction : customer.get().getTransactions()) {
+                    monthlyAmountList.add(CustomerUtil.createMonthlyAmountDto(calculateMonthlyDiscountPoints(transaction), transaction));
                 }
             }
         } catch (Exception exception) {
+            log.error("Error occurred for calculateMonthlyAmounts method as {}", exception.getLocalizedMessage());
             exception.printStackTrace();
-            throw new CalculateDiscountPointsException(exception.getLocalizedMessage());
         }
         return monthlyAmountList;
     }
 
     private Optional<Customer> validateCustomer(Long customerId) {
+
         if (customerId == null) {
             log.info("Customer id is null. Please provide a customer id.");
             return Optional.empty();
         }
         log.info("Calculation of discount points started for customer id: " + customerId);
-        Optional<Customer> customer;
+
+        Optional<Customer> customer = Optional.empty();
         try {
             customer = customerRepository.findByCustomerId(customerId);
             if (customer.isPresent()) {
-                log.debug("Customer details: " + customer);
+                log.debug("Customer details: {}", customer);
             } else {
-                customer = Optional.empty();
+                log.info("Customer details for customer id {} is not present", customerId);
             }
         } catch (Exception exception) {
             log.error("Error occurred while fetching customer details with customer id: " + customerId + " as " + exception.getLocalizedMessage());
-            throw new CustomerNotFoundException();
+            exception.printStackTrace();
         }
         return customer;
     }
@@ -159,37 +106,41 @@ public class CustomerServiceImpl implements CustomerService {
      */
     private Long calculateQuarterlyDiscountPoints(List<MonthlyAmountDto> monthlyAmounts) {
 
-        Long qurterlyAmount = 0l;
+        Long qurterlyAmount = 0L;
         for (MonthlyAmountDto monthlyAmountDto : monthlyAmounts) {
-            qurterlyAmount = qurterlyAmount + monthlyAmountDto.getRewardPoints();
+            if (null != monthlyAmountDto) {
+                qurterlyAmount = qurterlyAmount + monthlyAmountDto.getRewardPoints();
+            } else {
+                log.info("MonthlyAmountDto is not available.");
+            }
         }
         return qurterlyAmount;
     }
 
     private Optional<Long> calculateMonthlyDiscountPoints(Transaction transaction) {
 
-        long monthlyDiscountPoints = 0l;
+        long monthlyDiscountPoints = 0L;
         try {
-            Double amount = transaction.getAmount();
-            // ex: $120 = 2*$20 +1*$50 = 90 pts
-            if (null != amount && amount != 0.00) {
-                // 1 point for every dollar spent between $50 and $100 in each transaction.
-                if (amount > 50.00 && amount <= 100.00) {
-                    monthlyDiscountPoints = (long) (Math.floor(amount - 50.00));
-                } // A customer receives 2 points for every dollar spent over $100 in each transaction
-                else if (amount > 100.00) {
-                    monthlyDiscountPoints = (long) Double.sum(50.00, (Math.floor(amount - 100.00)) * 2);
+            if (null != transaction) {
+                Double amount = transaction.getAmount();
+                // ex: $120 = 2*$20 +1*$50 = 90 pts
+                if (null != amount && amount != 0.00) {
+                    // 1 point for every dollar spent between $50 and $100 in each transaction.
+                    if (amount > 50.00 && amount <= 100.00) {
+                        monthlyDiscountPoints = (long) (Math.floor(amount - 50.00));
+                    } // A customer receives 2 points for every dollar spent over $100 in each transaction
+                    else if (amount > 100.00) {
+                        monthlyDiscountPoints = (long) Double.sum(50.00, (Math.floor(amount - 100.00)) * 2);
+                    }
+                } else {
+                    log.info("Transaction amount is zero or null for customer id {} of transaction id {}", transaction.getCustomer().getCustomerId(), transaction.getId());
                 }
+            } else {
+                log.info("Transaction details is not available.");
             }
-        } catch (NullPointerException exception) {
-            exception.printStackTrace();
-            throw new NullPointerException(exception.getLocalizedMessage());
-        } catch (ArithmeticException exception) {
-            exception.printStackTrace();
-            throw new MonthlyDiscountPointsArithmeticException(exception.getLocalizedMessage());
         } catch (Exception exception) {
+            log.error("Error occurred while calculating monthly discount points");
             exception.printStackTrace();
-            throw new MonthlyDiscountPointsException(exception.getLocalizedMessage());
         }
         log.debug("Monthly discount points: {}", monthlyDiscountPoints);
         return Optional.of(monthlyDiscountPoints);

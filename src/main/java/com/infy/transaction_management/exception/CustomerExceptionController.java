@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-public class CustomerException {
+public class CustomerExceptionController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneralException(Exception ex) {
@@ -16,16 +16,6 @@ public class CustomerException {
     @ExceptionHandler(CustomerNotFoundException.class)
     public ResponseEntity<String> handleCustomerNotFoundException(CustomerNotFoundException ex) {
         return new ResponseEntity<>("Customer not found error occurred: " + ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(MonthlyDiscountPointsArithmeticException.class)
-    public ResponseEntity<String> handleMonthlyDiscountPointsArithmeticException(MonthlyDiscountPointsArithmeticException ex) {
-        return new ResponseEntity<>("Monthly discount points arithmetic error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(MonthlyDiscountPointsException.class)
-    public ResponseEntity<String> handleMonthlyDiscountPointsException(MonthlyDiscountPointsException ex) {
-        return new ResponseEntity<>("Monthly discount points error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(CalculateDiscountPointsException.class)
