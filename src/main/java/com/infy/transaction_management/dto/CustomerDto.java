@@ -19,7 +19,7 @@ public class CustomerDto implements Serializable {
     private Long id;
 
     @NotNull(message = "Customer name is mandatory")
-    @Size(min=2, max=30)
+    @Size(min = 2, max = 30)
     private String customerName;
 
     private Long customerId;

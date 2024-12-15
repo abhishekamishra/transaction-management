@@ -13,13 +13,4 @@ public class CustomerExceptionController {
         return new ResponseEntity<>("An unexpected error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<String> handleCustomerNotFoundException(CustomerNotFoundException ex) {
-        return new ResponseEntity<>("Customer not found error occurred: " + ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(CalculateDiscountPointsException.class)
-    public ResponseEntity<String> handleCalculateDiscountPointsException(CalculateDiscountPointsException ex) {
-        return new ResponseEntity<>("Calculate discount points error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
 }

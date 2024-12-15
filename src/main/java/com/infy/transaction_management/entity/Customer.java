@@ -29,6 +29,6 @@ public class Customer {
     @Column(name = "customer_id")
     private Long customerId;
 
-    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private Set<Transaction> transactions;
 }

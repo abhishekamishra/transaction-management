@@ -12,7 +12,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 @ToString
 public class MonthlyAmountDto implements Serializable {
+
     private String month;
+
     private String amount;
+
     private Long rewardPoints;
 }
