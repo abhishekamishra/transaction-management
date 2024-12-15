@@ -23,6 +23,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    /**
+     * This method saves customers details to database
+     *
+     * @param customerDtos - customerDto objects containing user provided data
+     * @return saved customer details
+     */
     @Override
     public Optional<List<CustomerDto>> saveCustomerDetails(List<CustomerDto> customerDtos) {
         List<CustomerDto> customerDtoList = new ArrayList<>();
@@ -30,7 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
             try {
                 // saving customer details to database
                 List<Customer> customerDetails = customerRepository.saveAllAndFlush(CustomerUtil.createCustomer(customerDtos));
-                // converting customer objects into customerdtos
+                // converting customer objects into customerdto objects
                 customerDtoList = customerDetails.stream().map(cust -> new CustomerDto(cust.getId() == null ? null : cust.getId(), cust.getCustomerName() == null ? null : cust.getCustomerName(), cust.getCustomerId() == null ? null : cust.getCustomerId(), cust.getTransactions() == null ? null : CustomerUtil.getTransactionsDto(cust.getTransactions()))).toList();
             } catch (Exception exception) {
                 log.error("Error occurred while saving customer details to database as {}", exception.getLocalizedMessage());
@@ -40,33 +46,50 @@ public class CustomerServiceImpl implements CustomerService {
         return Optional.of(customerDtoList);
     }
 
+    /**
+     * This method calculates discountPoints
+     *
+     * @param customerId - user provided customer id
+     * @return TransactionDetailsDto object - It has customer details, monthly reward points and quarterly reward points
+     */
     @Override
     public Optional<TransactionDetailsDto> calculateDiscountPoints(Long customerId) {
 
         Optional<Customer> customer = validateCustomer(customerId);
+
         if (customer.isPresent()) {
+
             TransactionDetailsDto transactionDetailsDto = new TransactionDetailsDto();
             transactionDetailsDto.setCustomerId(customer.get().getCustomerId() == null ? null : customer.get().getCustomerId());
             transactionDetailsDto.setCustomerName(customer.get().getCustomerName() == null ? null : customer.get().getCustomerName());
 
             List<MonthlyAmountDto> monthlyAmounts = calculateMonthlyAmounts(customer);
 
-            transactionDetailsDto.setMonthlyDetails(monthlyAmounts.size() == 0 ? null : monthlyAmounts);
-            transactionDetailsDto.setSumOfQurterlyRewardPoints(monthlyAmounts.size() == 0 ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
+            transactionDetailsDto.setMonthlyDetails(monthlyAmounts.isEmpty() ? null : monthlyAmounts);
+            transactionDetailsDto.setSumOfQurterlyRewardPoints(monthlyAmounts.isEmpty() ? null : calculateQuarterlyDiscountPoints(monthlyAmounts));
 
             log.info("TransactionDetailsDto: {}", transactionDetailsDto);
             return Optional.of(transactionDetailsDto);
         }
+
         log.info("Customer details for customer id {} is not present. So could not proceed with rewards points calculation.", customerId);
         return Optional.empty();
     }
 
+    /**
+     * This method creates a list of monthly amounts and reward points(MonthlyAmountDto) per month basis
+     *
+     * @param customer - customer object
+     * @return List of MonthlyAmountDto objects
+     */
     private List<MonthlyAmountDto> calculateMonthlyAmounts(Optional<Customer> customer) {
+
         List<MonthlyAmountDto> monthlyAmountList = new ArrayList<>();
 
         try {
             if (customer.isPresent() && !customer.get().getTransactions().isEmpty()) {
 
+                // iterates list of transactions per customer
                 for (Transaction transaction : customer.get().getTransactions()) {
                     monthlyAmountList.add(CustomerUtil.createMonthlyAmountDto(calculateMonthlyDiscountPoints(transaction), transaction));
                 }
@@ -78,6 +101,12 @@ public class CustomerServiceImpl implements CustomerService {
         return monthlyAmountList;
     }
 
+    /**
+     * This method validates if customer is available or not based on the customer id
+     *
+     * @param customerId - customer id
+     * @return Customer object
+     */
     private Optional<Customer> validateCustomer(Long customerId) {
 
         if (customerId == null) {
@@ -87,6 +116,7 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("Calculation of discount points started for customer id: " + customerId);
 
         Optional<Customer> customer = Optional.empty();
+
         try {
             customer = customerRepository.findByCustomerId(customerId);
             if (customer.isPresent()) {
@@ -98,28 +128,44 @@ public class CustomerServiceImpl implements CustomerService {
             log.error("Error occurred while fetching customer details with customer id: " + customerId + " as " + exception.getLocalizedMessage());
             exception.printStackTrace();
         }
+
         return customer;
     }
 
-    /***
-     * Quarterly discount points calculated
+    /**
+     * This method calculates quarterly discount points.
+     * i.e.: quarterly discount points = sum of three months discount points
+     *
+     * @param monthlyAmounts - list of MonthlyAmountDto object
+     * @return sum of quarterly reward points
      */
     private Long calculateQuarterlyDiscountPoints(List<MonthlyAmountDto> monthlyAmounts) {
 
-        Long qurterlyAmount = 0L;
+        long sumOfQurterlyRewardPoints = 0L;
+
+        // iterating monthly reward points
         for (MonthlyAmountDto monthlyAmountDto : monthlyAmounts) {
             if (null != monthlyAmountDto) {
-                qurterlyAmount = qurterlyAmount + monthlyAmountDto.getRewardPoints();
+                // quarterly discount points = sum of three months discount points
+                sumOfQurterlyRewardPoints = sumOfQurterlyRewardPoints + monthlyAmountDto.getRewardPoints();
             } else {
                 log.info("MonthlyAmountDto is not available.");
             }
         }
-        return qurterlyAmount;
+
+        return sumOfQurterlyRewardPoints;
     }
 
+    /**
+     * This method calculates monthly discount points based on the transaction amounts per month
+     *
+     * @param transaction - Transaction object
+     * @return monthly discount points
+     */
     private Optional<Long> calculateMonthlyDiscountPoints(Transaction transaction) {
 
         long monthlyDiscountPoints = 0L;
+
         try {
             if (null != transaction) {
                 Double amount = transaction.getAmount();
@@ -142,6 +188,7 @@ public class CustomerServiceImpl implements CustomerService {
             log.error("Error occurred while calculating monthly discount points");
             exception.printStackTrace();
         }
+
         log.debug("Monthly discount points: {}", monthlyDiscountPoints);
         return Optional.of(monthlyDiscountPoints);
     }

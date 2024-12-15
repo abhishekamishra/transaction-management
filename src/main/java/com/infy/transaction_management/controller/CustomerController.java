@@ -24,7 +24,9 @@ public class CustomerController {
 
     @PostMapping("/save-customers")
     public ResponseEntity<List<CustomerDto>> saveCustomerDetails(@Valid @RequestBody List<CustomerDto> customerDtos) {
+
         Optional<List<CustomerDto>> customerDetails = customerService.saveCustomerDetails(customerDtos);
+
         if (customerDetails.isPresent() && !customerDetails.get().isEmpty()) {
             log.debug("Saved Customers Details: " + customerDetails.get());
             return ResponseEntity.status(HttpStatus.CREATED).body(customerDetails.get());
@@ -37,6 +39,7 @@ public class CustomerController {
     public ResponseEntity<TransactionDetailsDto> calculateDiscountPoints(@NotNull @PathVariable("id") Long id) {
 
         Optional<TransactionDetailsDto> transactionDetailsDto = customerService.calculateDiscountPoints(id);
+
         if (transactionDetailsDto.isPresent()) {
             log.info("Discount points for user id {} calculated successfully for Transaction: {}", id, transactionDetailsDto.get());
             return ResponseEntity.ok(transactionDetailsDto.get());
