@@ -4,11 +4,11 @@ import com.infy.transaction_management.dto.CustomerDto;
 import com.infy.transaction_management.dto.TransactionDetailsDto;
 import com.infy.transaction_management.dto.TransactionDto;
 import com.infy.transaction_management.service.CustomerService;
-import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 
-class CustomerControllerTest {
+public class CustomerControllerTest {
 
     @Mock
     private CustomerService customerService;
@@ -42,7 +42,8 @@ class CustomerControllerTest {
     private MockMvc mockMvc;
 
     @BeforeEach
-    public void setUp() throws JSONException {
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
 
         customerDtos = new ArrayList<>();
         CustomerDto customerDto = new CustomerDto();
