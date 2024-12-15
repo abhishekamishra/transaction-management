@@ -5,7 +5,6 @@ import com.infy.transaction_management.dto.TransactionDetailsDto;
 import com.infy.transaction_management.dto.TransactionDto;
 import com.infy.transaction_management.service.CustomerService;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -44,7 +43,7 @@ class CustomerControllerTest {
 
     @BeforeEach
     public void setUp() throws JSONException {
-        JSONObject obj = new JSONObject();
+
         customerDtos = new ArrayList<>();
         CustomerDto customerDto = new CustomerDto();
         customerDto.setCustomerName("User_1");
@@ -71,8 +70,6 @@ class CustomerControllerTest {
 
         customerDto.setTransactions(transactions);
         customerDtos.add(customerDto);
-
-        obj.put("list", customerDtos);
 
         this.mockMvc = MockMvcBuilders.standaloneSetup(customerController).build();
     }
